@@ -34,19 +34,19 @@ end
 hold off;
 end
 
-function [c, r] = splitRC(tri, points)
+function [r, c] = splitRC(tri, points)
 r = zeros(size(tri));
 c = zeros(size(tri));
 for a = 1:size(tri, 1)
     point1 = tri(a, 1);
     point2 = tri(a, 2);
     point3 = tri(a, 3);
-    r(a, 1) = points(point1, 1);
-    r(a, 2) = points(point2, 1);
-    r(a, 3) = points(point3, 1);
-    c(a, 1) = points(point1, 2);
-    c(a, 2) = points(point2, 2);
-    c(a, 3) = points(point3, 2);
+    r(a, 1) = points(point1, 2);
+    r(a, 2) = points(point2, 2);
+    r(a, 3) = points(point3, 2);
+    c(a, 1) = points(point1, 1);
+    c(a, 2) = points(point2, 1);
+    c(a, 3) = points(point3, 1);
 end
 end
 

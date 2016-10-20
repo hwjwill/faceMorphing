@@ -13,9 +13,9 @@ tri = delaunay(points);
 [r1, c1] = splitRC(tri, points1);
 
 result = uint8(zeros(size(im1)));
-for i = 1:3
+for i = 1:size(midR, 1)
     A = computeAffine([r1(i, :), c1(i, :)], [midR(i, :), midC(i, :)]);
-    mask = roipoly(im1, r1(i, :), c1(i, :));
+    mask = roipoly(im1, c1(i, :), r1(i, :));
     [triR, triC] = find(mask);
     x = [triR'; triC'; ones(size(triR))'];
     y = round(A * x);
@@ -27,14 +27,14 @@ figure(2);
 imshow(result);
 hold on;
 for a = 1:size(midR, 1)
-    line([midR(a, 1), midR(a, 2)], [midC(a, 1), midC(a, 2)]);
-    line([midR(a, 3), midR(a, 2)], [midC(a, 3), midC(a, 2)]);
-    line([midR(a, 1), midR(a, 3)], [midC(a, 1), midC(a, 3)]);
+    line([midC(a, 1), midC(a, 2)], [midR(a, 1), midR(a, 2)]);
+    line([midC(a, 3), midC(a, 2)], [midR(a, 3), midR(a, 2)]);
+    line([midC(a, 1), midC(a, 3)], [midR(a, 1), midR(a, 3)]);
 end
 hold off;
 end
 
-function [r, c] = splitRC(tri, points)
+function [c, r] = splitRC(tri, points)
 r = zeros(size(tri));
 c = zeros(size(tri));
 for a = 1:size(tri, 1)

@@ -1,6 +1,16 @@
 function [] = main()
-part = 1;
+%% Change part number to see different parts of this project
+% Part 1 produces face morphing between two faces and save in a gif
+% animation
+% Part 2 takes 37 persons' face and find average shape and face, as well as
+% morph selected person into average shape
+% Part 3 morphes my picture to other's shape, or vice versa
+part = 3;
 if part == 1
+    %% Compute face morphing between two faces and save in a gif animation
+    % Both picture should be same size
+    % Chagne csv name is columne and row index of each keypoints. Both
+    % file points should be conresponding
     imname1 = 'will.jpg';
     imname2 = 'tom.jpg';
     points1csv = 'willPoints.csv';
@@ -9,15 +19,13 @@ if part == 1
     points2 = csvread(points2csv);
     im1 = imread(imname1);
     im2 = imread(imname2);
-    % im1 = rgb2gray(im1);
-    % im2 = rgb2gray(im2);
+    
     points = (points1 + points2) / 2;
     tri = delaunay(points);
     [r1, c1] = splitRC(tri, points1);
     [r2, c2] = splitRC(tri, points2);
     
-    
-    filename = 'small.gif';
+    filename = 'result.gif';
     [imind, cm] = rgb2ind(im1, 256);
     imwrite(imind, cm, filename, 'gif', 'LoopCount', Inf, 'DelayTime', 1/5);
     
@@ -29,18 +37,104 @@ if part == 1
     
     [imind, cm] = rgb2ind(im2, 256);
     imwrite(imind, cm, filename, 'gif', 'WriteMode', 'append', 'DelayTime', 1/5);
-    %imwrite(result, 'midway.jpg');
-    %imshow(result);
-    % hold on;
-    % for a = 1:size(midR, 1)
-    %     line([midC(a, 1), midC(a, 2)], [midR(a, 1), midR(a, 2)]);
-    %     line([midC(a, 3), midC(a, 2)], [midR(a, 3), midR(a, 2)]);
-    %     line([midC(a, 1), midC(a, 3)], [midR(a, 1), midR(a, 3)]);
-    % end
-    % hold off;
 elseif part == 2
+    %% Compute avg shape
+    avgPts = zeros(62, 2);
+    for i = 1:37
+        points = readPts(i);
+        avgPts = avgPts + points;
+    end
+    avgPts = avgPts / 37;
+    data = csvread('data/1.csv');
+    tri = data(1:58, 5:7) + 1;
+    [midR, midC] = splitRC(tri, avgPts);
+    avgShape = ones(480, 640) * 255;
+    figure(1);
+    imshow(avgShape);
+    hold on;
+    for a = 1:size(midR, 1)
+        line([midC(a, 1), midC(a, 2)], [midR(a, 1), midR(a, 2)]);
+        line([midC(a, 3), midC(a, 2)], [midR(a, 3), midR(a, 2)]);
+        line([midC(a, 1), midC(a, 3)], [midR(a, 1), midR(a, 3)]);
+    end
+    hold off;
+    
+    %% Morph some faces into average shape.
+    % Change num to decide which face to morph
+    num = 5;
+    tri = delaunay(avgPts);
+    [midR, midC] = splitRC(tri, avgPts);
+    source = readImg(num);
+    sourcePts = readPts(num);
+    [r1, c1] = splitRC(tri, sourcePts);
+    sourcer = source(:, :, 1);
+    sourceg = source(:, :, 2);
+    sourceb = source(:, :, 3);
+    morphedr = warp(sourcer, r1, c1, midR, midC);
+    morphedg = warp(sourceg, r1, c1, midR, midC);
+    morphedb = warp(sourceb, r1, c1, midR, midC);
+    morphed = cat(3, morphedr, morphedg, morphedb);
+    imshow(morphed);
+    filename = strcat(num2str(num), '.jpg');
+    imwrite(morphed, filename);
+    %% Compute average face of the population
+    avgr = zeros(480, 640);
+    avgg = zeros(480, 640);
+    avgb = zeros(480, 640);
+    for j = 1:37
+        source = readImg(j);
+        sourcePts = readPts(j);
+        [r1, c1] = splitRC(tri, sourcePts);
+        sourcer = source(:, :, 1);
+        sourceg = source(:, :, 2);
+        sourceb = source(:, :, 3);
+        avgr = avgr + double(warp(sourcer, r1, c1, midR, midC));
+        avgg = avgg + double(warp(sourceg, r1, c1, midR, midC));
+        avgb = avgb + double(warp(sourceb, r1, c1, midR, midC));        
+    end
+    avgr = uint8(avgr / 37);
+    avgg = uint8(avgg / 37);
+    avgb = uint8(avgb / 37);
+    avgPop = cat(3, avgr, avgg, avgb);
+    imwrite(avgPop, 'avgPop.jpg');
+elseif part == 3
+    %% Warp my face to average geometry, and average face into my geometry
+    % Code below warps my face to average geometry. For reverse result,
+    % change imname1 and swap pointsCSV
+    imname1 = 'willwhite.jpg';
+    points1csv = 'willwhitePts.csv';
+    points2csv = 'whitepts.csv';
+    sourcePts = csvread(points1csv);
+    points2 = csvread(points2csv);
+    source = imread(imname1);
+    tri = delaunay(points2);
+    [r1, c1] = splitRC(tri, sourcePts);
+    [midR, midC] = splitRC(tri, points2);
+    sourcer = source(:, :, 1);
+    sourceg = source(:, :, 2);
+    sourceb = source(:, :, 3);
+    morphedr = warp(sourcer, r1, c1, midR, midC);
+    morphedg = warp(sourceg, r1, c1, midR, midC);
+    morphedb = warp(sourceb, r1, c1, midR, midC);
+    morphed = cat(3, morphedr, morphedg, morphedb);
+    imwrite(morphed, 'will2white.jpg');
+    imshow(morphed);
+elseif part == 4
+    %% Calculate caricature
     
 end
+end
+
+%% Helper functions
+function [img] = readImg(num)
+s = strcat('data/', num2str(num), '.bmp');
+img = imread(s);
+end
+
+function [points] = readPts(num)
+s = strcat('data/', num2str(num), '.csv');
+data = csvread(s);
+points = [data(:, 3) * 640, data(:, 4) * 480];
 end
 
 function [morphed_im] = morph(im1, im2, im1_pts, im2_pts, tri, warp_frac,...

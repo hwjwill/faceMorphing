@@ -6,7 +6,8 @@ function [] = main()
 % morph selected person into average shape
 % Part 3 morphes my picture to other's shape, or vice versa
 % Part 4 return caricature of my face from mean face calculated from part 2
-part = 4;
+% Part 5 morphes me with average white female in America
+part = 5;
 if part == 1
     %% Compute face morphing between two faces and save in a gif animation
     % Both picture should be same size
@@ -103,9 +104,9 @@ elseif part == 3
     %% Warp my face to average geometry, and average face into my geometry
     % Code below warps my face to average geometry. For reverse result,
     % change imname1 and swap pointsCSV
-    imname1 = 'white.jpg';
-    points2csv = 'willwhitePts.csv';
-    points1csv = 'whitepts.csv';
+    imname1 = 'willHor.jpg';
+    points1csv = 'willAvgPts.csv';
+    points2csv = 'avgpts.csv';
     sourcePts = csvread(points1csv);
     points2 = csvread(points2csv);
     source = imread(imname1);
@@ -119,17 +120,46 @@ elseif part == 3
     morphedg = warp(sourceg, r1, c1, midR, midC);
     morphedb = warp(sourceb, r1, c1, midR, midC);
     morphed = cat(3, morphedr, morphedg, morphedb);
-    imwrite(morphed, 'will2whiteAppearance.jpg');
+    imwrite(morphed, 'will2avg.jpg');
     imshow(morphed);
 elseif part == 4
     %% Calculate caricature
+    % Lambda controls weight of delta
+    lambda = 0.5;
     imname1 = 'willHor.jpg';
-    imname2 = 'avg2will.jpg';
-    face = imread(imname1);
-    avg = imread(imname2);
-    delta = face - avg;
-    result = avg + 0.9 * delta;
-    imshow(result);
+    points1csv = 'willAvgPts.csv';
+    points2csv = 'avgpts.csv';
+    facepts = csvread(points1csv);
+    avgpts = csvread(points2csv);
+    faceimg = imread(imname1);
+    delta = facepts - avgpts;
+    resultpts = avgpts + lambda * delta;
+    tri = delaunay(resultpts);
+    [r1, c1] = splitRC(tri, facepts);
+    [midR, midC] = splitRC(tri, resultpts);
+    sourcer = faceimg(:, :, 1);
+    sourceg = faceimg(:, :, 2);
+    sourceb = faceimg(:, :, 3);
+    morphedr = warp(sourcer, r1, c1, midR, midC);
+    morphedg = warp(sourceg, r1, c1, midR, midC);
+    morphedb = warp(sourceb, r1, c1, midR, midC);
+    morphed = cat(3, morphedr, morphedg, morphedb);
+    imwrite(morphed, 'caricature.jpg');
+    imshow(morphed);
+elseif part == 5;
+    %% Bells and whistle part.
+    % Following generate my face with average white female color. This part
+    % is dependent on result in part 3 to warp face to target shape
+    im1 = imread('willWhite.jpg');
+    im2 = imread('whiteWillshape.jpg');
+    r = im1 * 0.5 + im2 * 0.5;
+    imwrite(r, 'will2whiteAppearance.jpg');
+    
+    % Following generates my face to average white female shape and color
+    im1 = imread('will2white.jpg');
+    im2 = imread('white.jpg');
+    r = im1 * 0.5 + im2 * 0.5;
+    imwrite(r, 'whiteShapeAndColor.jpg');    
 end
 end
 

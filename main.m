@@ -5,7 +5,8 @@ function [] = main()
 % Part 2 takes 37 persons' face and find average shape and face, as well as
 % morph selected person into average shape
 % Part 3 morphes my picture to other's shape, or vice versa
-part = 3;
+% Part 4 return caricature of my face from mean face calculated from part 2
+part = 4;
 if part == 1
     %% Compute face morphing between two faces and save in a gif animation
     % Both picture should be same size
@@ -77,6 +78,7 @@ elseif part == 2
     imshow(morphed);
     filename = strcat(num2str(num), '.jpg');
     imwrite(morphed, filename);
+    
     %% Compute average face of the population
     avgr = zeros(480, 640);
     avgg = zeros(480, 640);
@@ -101,9 +103,9 @@ elseif part == 3
     %% Warp my face to average geometry, and average face into my geometry
     % Code below warps my face to average geometry. For reverse result,
     % change imname1 and swap pointsCSV
-    imname1 = 'willwhite.jpg';
-    points1csv = 'willwhitePts.csv';
-    points2csv = 'whitepts.csv';
+    imname1 = 'white.jpg';
+    points2csv = 'willwhitePts.csv';
+    points1csv = 'whitepts.csv';
     sourcePts = csvread(points1csv);
     points2 = csvread(points2csv);
     source = imread(imname1);
@@ -117,11 +119,17 @@ elseif part == 3
     morphedg = warp(sourceg, r1, c1, midR, midC);
     morphedb = warp(sourceb, r1, c1, midR, midC);
     morphed = cat(3, morphedr, morphedg, morphedb);
-    imwrite(morphed, 'will2white.jpg');
+    imwrite(morphed, 'will2whiteAppearance.jpg');
     imshow(morphed);
 elseif part == 4
     %% Calculate caricature
-    
+    imname1 = 'willHor.jpg';
+    imname2 = 'avg2will.jpg';
+    face = imread(imname1);
+    avg = imread(imname2);
+    delta = face - avg;
+    result = avg + 0.9 * delta;
+    imshow(result);
 end
 end
 
